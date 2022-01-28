@@ -59,7 +59,7 @@ export default function Character({ char }: Props) {
 
   for (const key in char.sets) {
     arts.push(
-      <div className="w-8 flex flex-col rounded-md" key={key}>
+      <div className="w-8 flex flex-row rounded-md" key={key}>
         <Tooltip2
           content={<div className="bg-gray-800 m-2 p-2 rounded-md">{key}</div>}
         >
@@ -71,7 +71,7 @@ export default function Character({ char }: Props) {
           />
         </Tooltip2>
 
-        <span className="text-center text-xs">{char.sets[key]}</span>
+        <span className="text-center text-xs mt-1">{char.sets[key]}</span>
       </div>
     );
   }
@@ -99,6 +99,16 @@ export default function Character({ char }: Props) {
               {char.talents.burst}
             </div>
             <div className="mt-2 mr-2 grid grid-cols-5">{arts}</div>
+            <Popover2 content={FullstatsView(char)}
+              placement="bottom"
+            >
+              <button
+                type="button"
+                className="inline-flex items-center px-2.5 py-1 border border-gray-500 text-xs font-medium rounded text-white bg-transparent hover:bg-indigo-200 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                View Detail
+              </button>
+            </Popover2>
           </div>
         </div>
         <div className="w-1/2">
@@ -135,7 +145,82 @@ export default function Character({ char }: Props) {
   );
 }
 
-function SubstatView({ char }: Props) {
+function decimalToPercent(stats: number) {
+  return (stats * 100).toFixed(2) + "%";
+}
+
+function FullstatsView(char: CharDetail) {
+  let dmgTitleTranslate: {[key:string]: string} = {
+    12: 'Pyro DMG Bonus',
+    13: 'Hydro DMG Bonus',
+    14: 'Cryo DMG Bonus',
+    15: 'Electro DMG Bonus',
+    16: 'Anemo DMG Bonus',
+    17: 'Geo DMG Bonus',
+    18: 'Physic DMG Bonus',
+  };
+
+  let dmgBonus: JSX.Element[] = [];
+  
+  for (const key in dmgTitleTranslate) {
+    const intKey = parseInt(key);
+    if (char.snapshot[intKey] == 0) {
+      continue;
+    }
+    
+    dmgBonus.push(
+      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt className="text-sm font-medium text-white">{dmgTitleTranslate[key]}</dt>
+        <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">
+          {decimalToPercent(char.snapshot[intKey])}
+        </dd>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-gray-600 border border-gray-700 shadow overflow-hidden rounded mx-18">
+      <div className="px-4 py-5 sm:px-6">
+        <h3 className="text-lg leading-6 font-medium text-white">Full Stats</h3>
+      </div>
+      <div className="border-t border-white px-4 py-5 sm:p-0">
+        <dl className="sm:divide-y sm:divide-gray-200">
+          <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt className="text-sm font-medium text-white">HP</dt>
+            <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">{(char.snapshot[HPP] * 100).toFixed(2) + "%"} | {char.snapshot[HP]}</dd>
+          </div>
+          <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt className="text-sm font-medium text-white">ATK</dt>
+            <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">{(char.snapshot[ATKP] * 100).toFixed(2) + "%"} | {char.snapshot[ATK]}</dd>
+          </div>
+          <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt className="text-sm font-medium text-white">EM</dt>
+            <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">{char.snapshot[EM].toFixed(2)}</dd>
+          </div>
+          <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt className="text-sm font-medium text-white">Crit Rate</dt>
+            <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">{decimalToPercent(char.snapshot[CR])}</dd>
+          </div>
+          <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt className="text-sm font-medium text-white">Crit Damage</dt>
+            <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">{decimalToPercent(char.snapshot[CD])}</dd>
+          </div>
+          <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt className="text-sm font-medium text-white">ER</dt>
+            <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">{decimalToPercent(1 + char.snapshot[ER])}</dd>
+          </div>
+          <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt className="text-sm font-medium text-white">Healing Bonus</dt>
+            <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">{decimalToPercent(char.snapshot[Heal])}</dd>
+          </div>
+          {dmgBonus}
+        </dl>
+      </div>
+    </div>
+  )
+}
+
+function SubstatView(char: CharDetail) {
   return (
     <div className="flex flex-col m-2 p-2">
       <div className="flex flex-row">
